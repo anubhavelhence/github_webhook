@@ -170,6 +170,120 @@ To run the Flask application as a service, create a systemd service file:
 - **Permission Denied Errors**: Ensure the user running the service has the correct permissions to execute required commands like `git pull` or `systemctl restart`.
 - **Service Fails to Start**: Check `/var/log/webhook.log` for specific error messages. Make sure all dependencies are correctly installed.
 
+
+## 🔒 Configuring Permissions and Authentication
+
+To ensure your webhook receiver and associated services run smoothly, you'll need to configure certain permissions and authentication methods securely. Below, we cover two key steps: configuring `sudo` permissions using `visudo` and setting up Git with a Personal Access Token (PAT) for secure access.
+
+### 🔧 Configuring `sudo` Permissions Using `visudo`
+
+When setting up your webhook receiver, you might need to restart services (like Gunicorn) or execute other privileged commands without manual intervention. To allow specific commands to run without prompting for a password, you can modify the `sudoers` file safely using `visudo`.
+
+#### **Why Use `visudo`?**
+
+`visudo` is a special command used to edit the `sudoers` file, which controls user privileges for executing commands as root or other users. It checks the syntax before saving changes, preventing errors that could lock you out of `sudo` access.
+
+#### **Steps to Configure Sudo Permissions:**
+
+1. **Open the sudoers file using `visudo`:**
+
+   ```bash
+   sudo visudo
+   ```
+
+   This command opens the sudoers file in a safe mode where syntax errors are checked before saving.
+
+2. **Add a Rule for Your User:**
+
+   Add the following line at the end of the file to allow the `ubuntu` user (or whichever user your service runs under) to restart the Gunicorn service without being prompted for a password:
+
+   ```bash
+   ubuntu ALL=(ALL) NOPASSWD: /bin/systemctl restart gunicorn.service
+   ```
+
+   - `ubuntu` is the user running your service. Replace it if your service runs under a different user.
+   - `NOPASSWD:` tells `sudo` not to ask for a password when executing the specified command.
+
+3. **Save and Exit:**
+
+   After adding the line, save the file and exit (`Ctrl + X`, then `Y` to confirm, and `Enter` to save changes).
+
+4. **Test the Configuration:**
+
+   Test the permission change by running the command manually to ensure it works without asking for a password:
+
+   ```bash
+   sudo systemctl restart gunicorn.service
+   ```
+
+### 🔐 Configuring Git Authentication with a Personal Access Token (PAT)
+
+GitHub removed support for password-based authentication for Git operations, making Personal Access Tokens (PATs) the preferred way to authenticate. PATs provide a secure method to access your repositories without exposing your password.
+
+#### **Why Use a Personal Access Token?**
+
+- **Security:** PATs are more secure than passwords and can be easily revoked or regenerated.
+- **Scope Control:** PATs allow you to specify access scopes, limiting the permissions granted to your token.
+
+#### **Steps to Configure Git with a Personal Access Token:**
+
+1. **Generate a Personal Access Token:**
+
+   - Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens).
+   - Click **Generate new token** and set an expiration date and scope for the token (e.g., `repo` for full access to your repositories).
+   - Copy the token when it is generated. **You will not be able to see it again.**
+
+2. **Configure Git to Use the Token:**
+
+   You need to update your Git configuration to use the PAT instead of your GitHub password. Here's how:
+
+   - **Set the Remote URL with the Token:**
+
+     Replace your existing remote URL with a URL that includes the token:
+
+     ```bash
+     git remote set-url origin https://<username>:<PAT>@github.com/<username>/<repository>.git
+     ```
+
+     Replace `<username>` with your GitHub username, `<PAT>` with your Personal Access Token, and `<repository>` with your repository name.
+
+   - **Example:**
+
+     ```bash
+     git remote set-url origin https://smart-qna:ghp_abcd1234yourtoken@github.com/smart-qna/smartqna-be.git
+     ```
+
+3. **Store Credentials Using Git Credential Helper (Optional but Recommended):**
+
+   To avoid typing your token each time, configure Git to store your credentials:
+
+   ```bash
+   git config --global credential.helper store
+   ```
+
+   The next time you perform a Git operation requiring authentication, Git will prompt you to enter your username and token, and then it will save these credentials securely.
+
+4. **Verify the Setup:**
+
+   Test the configuration by pulling or pushing to the repository:
+
+   ```bash
+   git pull
+   ```
+
+   If configured correctly, Git should authenticate using your PAT without further prompts.
+
+### 🛡️ Important Security Notes:
+
+- **Limit Token Scopes**: Always set the minimum necessary scopes for your PAT. For basic Git operations, `repo` scope is typically sufficient.
+- **Keep Tokens Secure**: Treat PATs like passwords. Do not share them, and consider rotating them periodically.
+- **Revoke Tokens if Compromised**: If you suspect your token has been exposed, immediately revoke it from your GitHub settings.
+
+Following these steps ensures that your webhook receiver and Git operations run securely and smoothly without manual intervention. By properly configuring sudo permissions and using PATs, you'll create a robust and secure setup for managing GitHub webhooks.
+```
+
+This section provides a detailed explanation of configuring `sudo` with `visudo` for secure privilege management and setting up Git with a Personal Access Token, emphasizing security best practices.
+
 ## 📚 Resources
 
 - [GitHub Webhooks Documentation](https://docs.github.com/en/developers/webhooks-and-events/webhooks/about-webhooks)
@@ -189,7 +303,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Happy Coding! 🎉
 ```
 
-This `README.md` provides a detailed guide for setting up GitHub webhooks, creating a Flask receiver, securing it, and managing it with a systemd service. It includes troubleshooting tips, resources, and a call for contributions, making it extensive and user-friendly. Adjust paths and specific details according to your project environment.
 
 # github_webhook
 
