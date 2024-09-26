@@ -1,6 +1,4 @@
-Here's a comprehensive and engaging `README.md` file for your GitHub repository. This guide will walk others through the process of creating GitHub webhooks and setting up a service to handle them, providing extensive details to help users replicate the process on their own.
 
-```markdown
 # GitHub Webhook Integration Guide
 
 Welcome to the **GitHub Webhook Integration Guide**! This repository serves as a comprehensive guide to help you understand, create, and implement GitHub webhooks for your projects. Webhooks are a powerful way to automate tasks, trigger workflows, and keep your systems in sync with changes happening in your GitHub repositories.
