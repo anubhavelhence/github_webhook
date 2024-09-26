@@ -1,0 +1,17 @@
+[Unit]
+Description=GitHub Webhook Receiver
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/flask_webhook
+Environment="PATH=/usr/local/bin:/usr/bin:/bin:/home/ubuntu/smartqna-be/env/bin"
+ExecStart=/home/ubuntu/smartqna-be/env/bin/python /home/ubuntu/flask_webhook/webhook_receiver.py
+
+# Add these lines to capture stdout and stderr
+StandardOutput=append:/var/log/webhook.log
+StandardError=append:/var/log/webhook.log
+
+[Install]
+WantedBy=multi-user.target
